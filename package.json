@@ -1,0 +1,37 @@
+{
+  "name": "next-analysis",
+  "version": "0.0.1",
+  "description": "",
+  "files": [
+    "bin/",
+    "dist/"
+  ],
+  "bin": {
+    "next-analysis": "bin/index.js"
+  },
+  "scripts": {
+    "dev": "ts-node src/index",
+    "build": "tsc",
+    "dist": "node scripts/build.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@nestjs/common": "^7.6.13",
+    "@nestjs/core": "^7.6.13",
+    "@nestjs/platform-express": "^7.6.13",
+    "@nestjs/serve-static": "^2.1.4",
+    "@types/node": "^14.0.27",
+    "colors": "^1.4.0",
+    "commander": "^7.2.0",
+    "json5": "^2.2.0",
+    "log4js": "^6.3.0",
+    "reflect-metadata": "^0.1.13",
+    "rimraf": "^3.0.2",
+    "rxjs": "^6.6.6",
+    "ts-is-kind": "^1.0.0",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.7"
+  }
+}
