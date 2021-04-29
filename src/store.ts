@@ -74,7 +74,7 @@ class Store {
       pathMapping: this.pathMapping,
       compMapping: this.compMapping,
       i18nMapping: this.i18nMapping,
-    });
+    }).replace(new RegExp(this.projPath + "/", "g"), "");
   }
 }
 

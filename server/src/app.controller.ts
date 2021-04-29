@@ -15,6 +15,13 @@ export class AppController {
     return this.appService.getDataSource();
   }
 
+  @Get('/api/cmp')
+  getPageCmp(@Query('page') page) {
+    console.log('query page: ', page);
+    const cmp = this.appService.getPageCmp(page);
+    return cmp;
+  }
+
   @Get('/api/analysis')
   getAnalysisByPage(@Query('page') page) {
     console.log('query page: ', page);
@@ -27,6 +34,12 @@ export class AppController {
     console.log('query page: ', page);
     const graphData = this.appService.getGraphData(page);
     return graphData;
+  }
+
+  @Get('/api/allUsed')
+  getAllUsedCmpFiles() {
+    const pages = this.appService.getAllUsedCmpFiles()
+    return pages;
   }
 
   @Get('/api/all')

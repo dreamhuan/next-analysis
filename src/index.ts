@@ -33,7 +33,8 @@ async function main() {
     logger.info("======curPage======", curPage);
     const sourceFile = await getAst(curPage);
     if (sourceFile) {
-      visit(sourceFile);
+      // 第一个参数是node，第二个参数是sourceFile
+      visit(sourceFile, sourceFile);
     }
     await store.waitingForFinish();
     store.clearTask();

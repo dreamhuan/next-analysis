@@ -1,8 +1,9 @@
 import React from "react";
 import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+import CustomRouter from "./components/CustomRouter";
 import logo from "./logo.svg";
 import "./App.css";
-import CustomRouter from "./components/CustomRouter";
+import "antd/dist/antd.css";
 
 function App() {
   return (
@@ -13,6 +14,10 @@ function App() {
           <div>
             <Link to="/" className="App-link">
               Home
+            </Link>
+            {" | "}
+            <Link to="/i18n" className="App-link">
+              i18n
             </Link>
             {" | "}
             <Link to="/about" className="App-link">

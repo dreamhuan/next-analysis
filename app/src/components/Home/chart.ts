@@ -1,40 +1,19 @@
 import * as d3 from "d3";
-import { TData, TLink, TNode } from "./interface";
+import { IEvt, TData, TLink, TNode } from "./interface";
+import noop from "lodash/noop";
+import { isEmpty } from "lodash";
 
 const getColor = d3.scaleOrdinal(d3.schemeCategory10);
 
-const drag = (simulation) => {
-  function dragstarted(event) {
-    if (!event.active) simulation.alphaTarget(0.3).restart();
-    event.subject.fx = event.subject.x;
-    event.subject.fy = event.subject.y;
-  }
-
-  function dragged(event) {
-    event.subject.fx = event.x;
-    event.subject.fy = event.y;
-  }
-
-  function dragended(event) {
-    if (!event.active) simulation.alphaTarget(0);
-    event.subject.fx = null;
-    event.subject.fy = null;
-  }
-
-  return d3
-    .drag()
-    .on("start", dragstarted)
-    .on("drag", dragged)
-    .on("end", dragended);
-};
-
 const chart = (
   ele: HTMLElement | null,
-  data: TData,
+  data: TData | null,
   width = 600,
-  height = 600
+  height = 600,
+  eventBus: (e: IEvt) => void = noop
 ) => {
-  if (!ele) return;
+  if (isEmpty(ele)) return;
+  if (isEmpty(data)) return;
   const links = data.links.map((d) => Object.create(d));
   const nodes = data.nodes.map((d) => Object.create(d));
 
@@ -42,17 +21,30 @@ const chart = (
     .forceSimulation(nodes)
     .force(
       "link",
-      d3.forceLink(links).id((d) => d.id)
+      d3.forceLink(links).id((d: any) => d.id)
     )
     .force("charge", d3.forceManyBody())
     .force("center", d3.forceCenter(width / 2, height / 2));
 
-  // const svg = d3.create("svg").attr("viewBox", [0, 0, width, height]);
   const svg = d3
     .select(ele)
     .html("")
     .append("svg")
-    .attr("viewBox", [0, 0, width, height]);
+    .attr("viewBox", [0, 0, width, height] as any);
+
+  const arrow = svg
+    .append("defs")
+    .append("marker")
+    .attr("id", "arrow")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 20)
+    .attr("refY", 0)
+    .attr("markerWidth", 8)
+    .attr("markerHeight", 8)
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", "#666");
 
   const link = svg
     .append("g")
@@ -61,7 +53,27 @@ const chart = (
     .selectAll("line")
     .data(links)
     .join("line")
-    .attr("stroke-width", (d) => Math.sqrt(d.value));
+    .attr("stroke-width", (d) => Math.sqrt(d.value))
+    .attr("marker-end", "url(#arrow)");
+
+  const behavior = d3
+    .drag()
+    .on("start", (e) => {
+      const id = e.subject.id;
+      eventBus({ type: "click", data: { id } });
+      if (!e.active) simulation.alphaTarget(0.3).restart();
+      e.subject.fx = e.subject.x;
+      e.subject.fy = e.subject.y;
+    })
+    .on("drag", (e) => {
+      e.subject.fx = e.x;
+      e.subject.fy = e.y;
+    });
+  // .on("end", (e) => {
+  //   if (!e.active) simulation.alphaTarget(0);
+  //   e.subject.fx = null;
+  //   e.subject.fy = null;
+  // });
 
   const node = svg
     .append("g")
@@ -73,8 +85,8 @@ const chart = (
     // .attr("r", 5)
     // 入口设置为15，其他按反比例函数放缩到5-10（x∈[0,500]，y∈[5,10]）,undefined设为5
     .attr("r", (d) => (d.group === 0 ? 15 : 5000 / (d.group + 500) || 5))
-    .attr("fill", (d) => getColor(`${d.group}`))
-    .call(drag(simulation));
+    .attr("fill", (d) => (d.group === 0 ? "#000" : getColor(`${d.group}`)))
+    .call(behavior);
 
   node.append("title").text((d) => d.id);
 

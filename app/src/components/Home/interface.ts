@@ -13,3 +13,22 @@ export type TLink = {
   target: string;
   value: number;
 };
+
+export type IClickEvt = {
+  type: "click";
+  data: {
+    id: string;
+  };
+};
+
+export type IMoveEvt = {
+  type: "move";
+  data: {
+    aaa: number;
+  };
+};
+
+export type IEvt = IClickEvt | IMoveEvt;
+
+export type TEvtType = IEvt["type"];
+export type TEvtData = IEvt["data"];

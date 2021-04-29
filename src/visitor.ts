@@ -10,7 +10,7 @@ const frequentlyLib = ["react", "lodash", "moment", "classnames"];
 
 const i18nExps = ["i18n.t", "t"];
 
-export default function visit(node: ts.Node) {
+export default function visit(node: ts.Node, sf: ts.SourceFile) {
   const alias = store.alias;
   const projPath = store.projPath;
   const curPath = store.allPath[store.pathIdx];
@@ -25,6 +25,16 @@ export default function visit(node: ts.Node) {
     if (i18nExps.includes(expName)) {
       logger.info("======curPage======", expName, firstArg);
       store.addI18nMapping(curPath, firstArg);
+    }
+  }
+
+  if (!curPath.includes("/locales/")) {
+    if (kind.isStringLiteral(node) || kind.isJsxText(node)) {
+      if (/.*([\u4e00-\u9fa5])+.*/.test(nodeText)) {
+        const { line } = sf.getLineAndCharacterOfPosition(node.getStart());
+        console.log(`${curPath}:${line + 1}`);
+        console.log(nodeText);
+      }
     }
   }
 
@@ -129,6 +139,6 @@ export default function visit(node: ts.Node) {
       })
     );
   } else {
-    return node.forEachChild((node) => visit(node));
+    return node.forEachChild((node) => visit(node, sf));
   }
 }

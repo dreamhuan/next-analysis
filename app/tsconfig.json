@@ -4,10 +4,10 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "types": ["vite/client"],
     "allowJs": false,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
+    "strict": false,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "moduleResolution": "Node",
@@ -22,5 +22,6 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["./src"]
+  "include": ["src"],
+  "exclude": ["node_modules"]
 }

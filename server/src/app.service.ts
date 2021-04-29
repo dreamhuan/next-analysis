@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import * as fs from 'fs';
 import data from './data';
 import { IProjTree, IRefItem, IRefTree, TPathMapping } from './types';
 import graphMock from './mockGraph';
@@ -11,6 +12,13 @@ export class AppService {
 
   getDataSource() {
     return data.analysis;
+  }
+
+  getPageCmp(page) {
+    const {
+      analysis: { pathMapping },
+    } = data;
+    return pathMapping[page];
   }
 
   getAnalysisByPage(page) {
@@ -31,6 +39,12 @@ export class AppService {
     });
     generatorRefTree(refTree.refs, pathMapping);
     return refTree;
+  }
+
+  getAllUsedCmpFiles() {
+    const all = data.analysis.allPath;
+    const files = all.filter((file: string) => judgeEnds(file, ['.tsx']));
+    return files;
   }
 
   getAllFiles() {
@@ -56,13 +70,66 @@ export class AppService {
     return notUsed;
   }
 
-  getI18N() {
+  async getI18N() {
+    const projPath = data.analysis.projPath;
     const i18nMapping = data.analysis.i18nMapping;
+    // i18nMapping取出所有的key并去重
     let list = Object.entries(i18nMapping)
       .map(([k, v]) => v)
       .flat(1);
     list = [...new Set(list)];
-    return list;
+    // 拿本地i18n文件
+    const readLanPromise = ['zh', 'en']
+      .map((lan) => `${projPath}/client/static/locales/${lan}/translation.json`)
+      .map((f) => getFileContent(f))
+      .map((p) => p.then((str) => JSON.parse(str)));
+    const [zhLang, enLang] = await Promise.all(readLanPromise);
+    // 合成本地文件的i18n对象
+    let fileLangObj = mergeLang({
+      zh: zhLang,
+      en: enLang,
+    });
+    const fileLangKeys = Object.keys(fileLangObj);
+    // 根据用到的key去i18n对象里拿数据
+    let usedLang = {};
+    let specialKeys = [];
+    let specialMap = { number: 0 };
+    list.forEach((i18nKey) => {
+      // 特殊的key的处理
+      if (i18nKey.includes('+') || i18nKey.includes('`')) {
+        console.log(i18nKey);
+        specialKeys.push(i18nKey);
+        if (i18nKey.includes('`')) {
+          const keyRegStr = i18nKey
+            .replace(/`/g, '')
+            .replace(/\$\{.*\}/, '(.*)');
+          const keyReg = new RegExp(keyRegStr, 'g');
+          specialMap.number++;
+          specialMap[i18nKey] = {
+            reg: keyRegStr,
+            value: [],
+          };
+          fileLangKeys.forEach((k) => {
+            if (keyReg.test(k)) {
+              specialMap[i18nKey].value.push(k);
+              usedLang[k] = fileLangObj[k];
+            }
+          });
+        }
+      } else {
+        const realKey = i18nKey.replace(/'/g, '');
+        usedLang[realKey] = fileLangObj[realKey];
+      }
+    });
+
+    return {
+      i18nMapping,
+      list,
+      fileLangObj,
+      usedLang,
+      specialKeys,
+      specialMap,
+    };
   }
 
   getGraphData(page = '') {
@@ -71,45 +138,49 @@ export class AppService {
       return graphMock;
     }
 
-    let group = 1;
-    const all = data.analysis.allPath.filter((file: string) =>
-      judgeEnds(file, ['.tsx', '.ts', '.jsx', '.js']),
-    );
-    const entry = data.analysis.entry.filter((file: string) =>
-      judgeEnds(file, ['.tsx', '.ts', '.jsx', '.js']),
-    );
-    const pathMapping = data.analysis.pathMapping;
-    const nodeMap = all.reduce((acc, cur) => {
-      acc[cur] = {};
-      return acc;
-    }, {});
-
+    let pathMapping = { ...data.analysis.pathMapping };
     let nodes = [];
+    let nodeVisited = {};
     let links = [];
-    const allEntry = 'client';
-    nodeMap[allEntry] = { group: 0 };
-    entry.forEach((p) => {
-      nodeMap[p].group = group;
-      links.push({ source: allEntry, target: p, value: 1 });
-    });
 
-    Object.entries(pathMapping).forEach(([k, v]) => {
-      group += 1;
-      Object.entries(v).forEach(([innerK, innerV]) => {
-        if (innerK.startsWith('/')) {
-          nodeMap[k].group = nodeMap[k].group || group;
-          links.push({ source: k, target: innerK, value: 1 });
+    if (!page) {
+      const entry = data.analysis.entry.filter((file: string) =>
+        judgeEnds(file, ['.tsx', '.ts', '.jsx', '.js']),
+      );
+      pathMapping['client'] = entry.reduce((acc, cur) => {
+        acc[cur] = [];
+        return acc;
+      }, {});
+
+      nodes.push({ id: 'client', group: 0 });
+    } else {
+      nodes.push({ id: page, group: 0 });
+    }
+
+    let iter = 0;
+    let node = nodes[iter];
+    while (node) {
+      const item = pathMapping[node.id];
+      Object.keys(item || {}).forEach((k) => {
+        if (k.startsWith('client')) {
+          if (!nodeVisited[k]) {
+            nodeVisited[k] = true;
+            nodes.push({
+              id: k,
+              group: iter + 1,
+            });
+          }
+
+          links.push({
+            source: node.id,
+            target: k,
+            value: 1,
+          });
         }
       });
-    });
-
-    nodes = Object.keys(nodeMap).map((k) => {
-      const v = nodeMap[k];
-      return {
-        id: k,
-        group: v.group,
-      };
-    });
+      iter += 1;
+      node = nodes[iter];
+    }
 
     return {
       nodes,
@@ -124,7 +195,7 @@ function generatorRefTree(
   circleRefFlag = {},
 ) {
   for (const ref of refs) {
-    if (!ref.page.startsWith('/')) {
+    if (!ref.page.startsWith('client')) {
       continue;
     }
     if (circleRefFlag[ref.page]) {
@@ -171,4 +242,24 @@ function judgeEnds(str: string, endsArr: string[]) {
     }
   }
   return false;
+}
+
+async function getFileContent(file) {
+  const buff = await fs.promises.readFile(file);
+  return buff.toString();
+}
+
+function mergeLang(langMap) {
+  let obj = {};
+  Object.keys(langMap).forEach((lang) => {
+    const LangValue = langMap[lang];
+    Object.keys(LangValue).reduce((acc, cur) => {
+      acc[cur] = {
+        ...acc[cur],
+        [lang]: LangValue[cur],
+      };
+      return acc;
+    }, obj);
+  });
+  return obj;
 }
