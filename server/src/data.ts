@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import { IData } from './types';
+import { IData, TCompMapping } from './types';
 
 const projPath = process.env.PROJ_PATH;
 const filePath = projPath
@@ -9,6 +9,7 @@ const filePath = projPath
 
 class Data {
   analysis: IData;
+  cmpUsedMapping: TCompMapping;
 
   async init() {
     const content = await fs.promises.readFile(filePath);

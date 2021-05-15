@@ -97,7 +97,7 @@ export async function getProjAlias(rootPath: string) {
   const tsConfigPath = path.join(rootPath, "tsconfig.json");
   const tsConfigBF = await fs.promises.readFile(tsConfigPath);
   const tsConfig = JSON5.parse(tsConfigBF.toString());
-  let alias = tsConfig.compilerOptions.paths;
+  let alias = tsConfig.compilerOptions.paths || {};
   alias = Object.fromEntries(
     Object.entries(alias)
       .filter(([k, v]) => k !== "*")

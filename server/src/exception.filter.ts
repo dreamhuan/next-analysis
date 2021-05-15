@@ -21,6 +21,8 @@ export class AllExceptionFilter<T> implements ExceptionFilter {
 
     const message = exception.message || exception;
 
+    console.log(exception)
+
     const errorResponse = {
       status,
       success: false,

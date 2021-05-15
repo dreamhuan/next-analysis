@@ -8,8 +8,8 @@ const PROJ_PATH = process.env.PROJ_PATH;
 
 async function main() {
   console.log("PROJ_PATH: ", PROJ_PATH);
-  const devProjPath = "/Volumes/CaseSensitive/developer-purchase";
-  // const devProjPath = "/Volumes/CaseSensitive/developer-product";
+  // test
+  const devProjPath = "";
   const projPath = PROJ_PATH || devProjPath;
   store.projPath = projPath;
 
@@ -21,8 +21,9 @@ async function main() {
 
   const pagesDir = path.join(projPath, "/client/pages");
   const pages = await getPageList(pagesDir);
+  // test
   // const pages = [
-  //   "/Volumes/CaseSensitive/developer-purchase/client/components/pages/agreement/ContractTable.tsx",
+  //   "",
   // ];
   logger.info(pages);
   store.entry = [...pages];

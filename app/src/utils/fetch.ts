@@ -1,3 +1,4 @@
+import { message } from "antd";
 import isofetch from "isomorphic-fetch";
 import qs from "querystring";
 
@@ -70,12 +71,13 @@ function fetch<T = void>({
   }
 
   return isofetch(url, options)
-    .then(checkStatus)
     .then(parseJSON)
+    .then(checkStatus)
     .then((r) => {
       return r.result;
     })
     .catch((e) => {
+      message.error(e.errorMsg)
       return Promise.reject(e);
     });
 }

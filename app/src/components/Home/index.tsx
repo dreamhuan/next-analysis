@@ -1,22 +1,21 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Select, Card, Tree, message, Tooltip } from "antd";
+import { Button, Card, Tree, message, Tooltip } from "antd";
 import {
   AreaChartOutlined,
   ClearOutlined,
   CopyOutlined,
+  DownOutlined,
+  AimOutlined,
 } from "@ant-design/icons";
-import { getAllUsedPages, getGraphData, getPageCmp } from "@/api";
+import { getGraphData, getPageCmp } from "@/api";
 import chart from "./chart";
 import styles from "./styles.module.scss";
-import { IEvt, TData, TEvtData, TEvtType } from "./interface";
+import { IEvt, TData } from "./interface";
 import copy from "@/utils/copy";
 import cx from "classnames";
-
-const { Option } = Select;
-const { DirectoryTree } = Tree;
+import PageSelector from "@/components/common/PageSelector";
 
 export default function Home() {
-  const [all, setAll] = useState<string[]>([]);
   const [value, setValue] = useState<string>();
   const [data, setData] = useState({} as TData);
   const [curClick, setCurClick] = useState<{
@@ -29,11 +28,7 @@ export default function Home() {
 
   useEffect(() => {
     (async () => {
-      const [data, all] = await Promise.all([
-        getGraphData({ page: "" }),
-        getAllUsedPages(),
-      ]);
-      setAll(all);
+      const [data] = await Promise.all([getGraphData({ page: "" })]);
       setData(data);
     })();
   }, []);
@@ -61,9 +56,9 @@ export default function Home() {
   };
 
   const handleNodeClick = async (id) => {
-    const refCmp = await getPageCmp({ page: id });
+    const refCmp = (await getPageCmp({ page: id })) || {};
     console.log("refCmp", refCmp);
-    const cmp = Object.entries(refCmp || {}).map(([k, v]) => {
+    const cmp = Object.entries(refCmp).map(([k, v]) => {
       return {
         title: k,
         key: k,
@@ -91,32 +86,9 @@ export default function Home() {
   return (
     <div className={styles.home}>
       <div className={styles.operation}>
-        <Select
-          className={cx(styles.col, styles.select)}
-          showSearch
-          value={value}
-          placeholder="选择页面"
-          optionFilterProp="children"
-          onChange={handleChange}
-          filterOption={(input, option: any) =>
-            option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
-          }
-          allowClear
-          dropdownMatchSelectWidth={false}
-        >
-          <Option value={"test"}>test</Option>
-          {all.map((d: string) => {
-            return (
-              <Option key={d} value={d}>
-                {d}
-              </Option>
-            );
-          })}
-        </Select>
-        <Button className={styles.col} onClick={repaint}>
-          重绘
-        </Button>
-        <Card className={cx(styles.col, styles.card)} title="基本信息">
+        <PageSelector value={value} hasTest onChange={handleChange} />
+        <Button onClick={repaint}>重绘</Button>
+        <Card className={cx(styles.card)} title="基本信息">
           <p>
             结点路径：
             {curClick?.id && (
@@ -125,6 +97,12 @@ export default function Home() {
                   <AreaChartOutlined
                     className={styles.icon}
                     onClick={() => handleChange(curClick?.id)}
+                  />
+                </Tooltip>
+                <Tooltip title="组件引用分析">
+                  <AimOutlined
+                    className={styles.icon}
+                    onClick={() => window.open(`/cmp?page=${curClick?.id}`)}
                   />
                 </Tooltip>
                 <Tooltip title="复制文件路径">
@@ -144,10 +122,11 @@ export default function Home() {
           </p>
           <p>{curClick?.id}</p>
           <p>引用组件：</p>
-          <DirectoryTree
+          <Tree
             key={curClick?.id}
             className={styles.tree}
-            multiple
+            showLine
+            switcherIcon={<DownOutlined />}
             defaultExpandAll
             treeData={curClick?.cmp}
           />

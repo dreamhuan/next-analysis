@@ -15,14 +15,9 @@ export interface IProjTree {
   children?: IProjTree[];
 }
 
-export interface IRefTree {
-  page: string;
-  refs: IRefItem[];
-}
-
 export interface IRefItem {
   page: string;
-  comps: string[];
+  comps?: string[];
   refs: IRefItem[];
 }
 

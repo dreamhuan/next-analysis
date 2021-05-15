@@ -2,6 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import Home from "./Home";
 import Lang from "./Lang";
+import Cmp from "./Cmp";
 import About from "./About";
 
 export default function CustomRouter() {
@@ -10,6 +11,9 @@ export default function CustomRouter() {
       <Switch>
         <Route path="/i18n">
           <Lang />
+        </Route>
+        <Route path="/cmp">
+          <Cmp />
         </Route>
         <Route path="/about">
           <About />

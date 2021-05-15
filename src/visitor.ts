@@ -1,7 +1,6 @@
 import * as ts from "typescript";
 import * as kind from "ts-is-kind";
 import * as path from "path";
-import { NamedImports } from "typescript";
 import store from "./store";
 import logger from "./logger";
 import { addSuffix } from "./utils";
@@ -9,6 +8,8 @@ import { addSuffix } from "./utils";
 const frequentlyLib = ["react", "lodash", "moment", "classnames"];
 
 const i18nExps = ["i18n.t", "t"];
+
+const SHOW_ZH = process.env.SHOW_ZH;
 
 export default function visit(node: ts.Node, sf: ts.SourceFile) {
   const alias = store.alias;
@@ -28,7 +29,7 @@ export default function visit(node: ts.Node, sf: ts.SourceFile) {
     }
   }
 
-  if (!curPath.includes("/locales/")) {
+  if (SHOW_ZH && !curPath.includes("/locales/")) {
     if (kind.isStringLiteral(node) || kind.isJsxText(node)) {
       if (/.*([\u4e00-\u9fa5])+.*/.test(nodeText)) {
         const { line } = sf.getLineAndCharacterOfPosition(node.getStart());
@@ -69,8 +70,9 @@ export default function visit(node: ts.Node, sf: ts.SourceFile) {
       namedAsImp = (node.importClause?.namedBindings as ts.NamespaceImport)
         ?.name?.escapedText;
       // import {default as React} from 'react'
-      namedImp = (node.importClause
-        ?.namedBindings as ts.NamedImports)?.elements?.map(
+      namedImp = (
+        node.importClause?.namedBindings as ts.NamedImports
+      )?.elements?.map(
         (ele) => ele.propertyName?.escapedText || ele.name?.escapedText
       );
     } else if (kind.isExportDeclaration(node)) {

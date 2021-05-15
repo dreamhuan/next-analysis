@@ -20,6 +20,10 @@ function App() {
               i18n
             </Link>
             {" | "}
+            <Link to="/cmp" className="App-link">
+              cmp
+            </Link>
+            {" | "}
             <Link to="/about" className="App-link">
               About
             </Link>

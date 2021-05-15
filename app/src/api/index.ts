@@ -26,9 +26,35 @@ export const getPageCmp = async (body: { page: string }) => {
   return result;
 };
 
+export const getAnalysisByPage = async (body: { page: string }) => {
+  const result = await fetch<any>({
+    url: "/api/analysis",
+    method: "GET",
+    body,
+  });
+  return result;
+};
+
+export const getAnalysisByCmp = async (body: { page: string }) => {
+  const result = await fetch<any>({
+    url: "/api/analysisCmp",
+    method: "GET",
+    body,
+  });
+  return result;
+};
+
 export const getAllUsedPages = async () => {
   const result = await fetch<any>({
     url: "/api/allUsed",
+    method: "GET",
+  });
+  return result;
+};
+
+export const getAllUsedComps = async () => {
+  const result = await fetch<any>({
+    url: "/api/allUsedComp",
     method: "GET",
   });
   return result;

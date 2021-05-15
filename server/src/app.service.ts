@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import data from './data';
-import { IProjTree, IRefItem, IRefTree, TPathMapping } from './types';
+import { IProjTree, IRefItem, TCompMapping, TPathMapping } from './types';
 import graphMock from './mockGraph';
 
 @Injectable()
@@ -15,9 +15,16 @@ export class AppService {
   }
 
   getPageCmp(page) {
-    const {
-      analysis: { pathMapping },
-    } = data;
+    let pathMapping = { ...data.analysis.pathMapping };
+    if (page === 'client') {
+      const entry = data.analysis.entry.filter((file: string) =>
+        judgeEnds(file, ['.tsx', '.ts', '.jsx', '.js']),
+      );
+      pathMapping['client'] = entry.reduce((acc, cur) => {
+        acc[cur] = [];
+        return acc;
+      }, {});
+    }
     return pathMapping[page];
   }
 
@@ -25,7 +32,7 @@ export class AppService {
     const {
       analysis: { pathMapping },
     } = data;
-    const refTree: IRefTree = { page, refs: [] };
+    const refTree: IRefItem = { page, refs: [] };
     const refComps = pathMapping[page];
     if (!refComps) {
       throw 'page not fond';
@@ -41,10 +48,38 @@ export class AppService {
     return refTree;
   }
 
+  getAnalysisByCmp(page) {
+    let {
+      analysis: { pathMapping, compMapping },
+      cmpUsedMapping,
+    } = data;
+    if (!cmpUsedMapping) {
+      cmpUsedMapping = data.cmpUsedMapping = initCmpMapping(pathMapping);
+    }
+
+    const cmpTree: IRefItem = { page, refs: [] };
+    const refedComps = compMapping[page];
+    if (!refedComps) {
+      throw 'page not fond';
+    }
+    refedComps.forEach((compPath) => {
+      cmpTree.refs.push({
+        page: compPath,
+        refs: [],
+      });
+    });
+    generatorCmpTree(cmpTree.refs, cmpUsedMapping);
+    return cmpTree;
+  }
+
   getAllUsedCmpFiles() {
     const all = data.analysis.allPath;
     const files = all.filter((file: string) => judgeEnds(file, ['.tsx']));
     return files;
+  }
+
+  getAllUsedCmp() {
+    return Object.keys(data.analysis.compMapping);
   }
 
   getAllFiles() {
@@ -72,7 +107,7 @@ export class AppService {
 
   async getI18N() {
     const projPath = data.analysis.projPath;
-    const i18nMapping = data.analysis.i18nMapping;
+    const i18nMapping = data.analysis.i18nMapping || {};
     // i18nMapping取出所有的key并去重
     let list = Object.entries(i18nMapping)
       .map(([k, v]) => v)
@@ -156,6 +191,7 @@ export class AppService {
     } else {
       nodes.push({ id: page, group: 0 });
     }
+    nodeVisited[nodes[0].id] = true;
 
     let iter = 0;
     let node = nodes[iter];
@@ -195,7 +231,9 @@ function generatorRefTree(
   circleRefFlag = {},
 ) {
   for (const ref of refs) {
+    // console.log('current: ', ref.page);
     if (!ref.page.startsWith('client')) {
+      // console.log('third: ', ref.page);
       continue;
     }
     if (circleRefFlag[ref.page]) {
@@ -204,7 +242,7 @@ function generatorRefTree(
     }
     const refComps = mapping[ref.page];
     if (!refComps) {
-      console.log('end: ', ref.page);
+      // console.log('end: ', ref.page);
       continue;
     }
     circleRefFlag[ref.page] = 1;
@@ -216,6 +254,49 @@ function generatorRefTree(
       });
     });
     generatorRefTree(ref.refs, mapping, circleRefFlag);
+    circleRefFlag[ref.page] = 0;
+  }
+}
+function initCmpMapping(pathMapping) {
+  const mapping = {};
+  Object.entries(pathMapping || {}).forEach(([k, v]) => {
+    Object.keys(v).forEach((innerK) => {
+      if (innerK.startsWith('client')) {
+        if (mapping[innerK]) {
+          mapping[innerK].push(k);
+        } else {
+          mapping[innerK] = [k];
+        }
+      }
+    });
+  });
+  return mapping;
+}
+
+function generatorCmpTree(
+  refed: IRefItem[],
+  mapping: TCompMapping,
+  circleRefFlag = {},
+) {
+  for (const ref of refed) {
+    // console.log('current: ', ref.page);
+    if (circleRefFlag[ref.page]) {
+      console.log('circle: ', ref.page);
+      continue;
+    }
+    const refComps = mapping[ref.page];
+    if (!refComps) {
+      // console.log('end: ', ref.page);
+      continue;
+    }
+    circleRefFlag[ref.page] = 1;
+    refComps.forEach((compPath) => {
+      ref.refs.push({
+        page: compPath,
+        refs: [],
+      });
+    });
+    generatorCmpTree(ref.refs, mapping, circleRefFlag);
     circleRefFlag[ref.page] = 0;
   }
 }

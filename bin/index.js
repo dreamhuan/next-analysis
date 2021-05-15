@@ -35,10 +35,11 @@ async function run() {
   program
     .command("run")
     .option("-a, --analysis 执行静态分析，不传参数默认执行这个命令")
+    .option("-z, --zh 执行静态分析，输出项目中的中文")
     .option("-s, --server 启动node服务，确保先执行-r后再执行这个命令")
     .option("-p, --port [port]设置node服务端口，传了这个参数默认会启动服务")
     .action(async (opts, cmd) => {
-      const { server, port } = opts || {};
+      const { server, port, zh } = opts || {};
       const rootDir = process.cwd();
       const binDir = path.resolve(__dirname, "..");
       const distDir = path.resolve(__dirname, "../dist");
@@ -61,6 +62,10 @@ async function run() {
         } catch (e) {
           logger.error("next-analysis.json 不存在， 请先不带参数执行命令");
         }
+      } else if (zh) {
+        child = child_process.exec(
+          `cd ${distDir} && PROJ_PATH=${rootDir} SHOW_ZH=1 node index.js`
+        );
       } else {
         child = child_process.exec(
           `cd ${distDir} && PROJ_PATH=${rootDir} node index.js`

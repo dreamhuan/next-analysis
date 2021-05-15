@@ -16,6 +16,7 @@
 
 .App-header {
   position: fixed;
+  z-index: 10;
   top: 0;
   left: 0;
   display: flex;
@@ -41,4 +42,8 @@
 
 button {
   font-size: calc(10px + 2vmin);
+}
+
+body {
+  height: auto !important;
 }
