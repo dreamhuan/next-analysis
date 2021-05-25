@@ -84,7 +84,7 @@ export class AppService {
 
   getAllFiles() {
     const projTree = data.analysis.projTree;
-    const files = getProdFiles(projTree, data.analysis.projPath);
+    const files = getProdFiles(projTree, '');
     return files;
   }
 
@@ -302,7 +302,10 @@ function generatorCmpTree(
 }
 
 function getProdFiles(projTree: IProjTree, parent = '') {
-  const name = parent + '/' + projTree.name;
+  let name = projTree.name;
+  if (parent) {
+    name = parent + '/' + name;
+  }
   let files = [];
   if (projTree.isFile) {
     files = [name];

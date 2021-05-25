@@ -8,9 +8,9 @@
 
 然后进入到 next 项目的更目录，执行`next-analysis run` 分析引用得到引用文件`next-analysis.json`
 
-最后执行`next-analysis run -s`或者`next-analysis run -p 3000`（-s 默认 8080 端口）
+最后执行`next-analysis server`或者`next-analysis server -p 3000`（默认 8080 端口）
 
-访问`localhost:3000`可以看到页面。`localhost:3000/api/json`可以看到接口
+访问`localhost:8080`可以看到页面。`localhost:8080/api/json`可以看到接口
 
 ## 开发
 
@@ -33,6 +33,7 @@
 
 ## 发布
 
-1. 根目录下 `yarn dist`，会分别执行根目录、server 目录、app 目录的 build
+1. 根目录下 `yarn dist`，会分别执行根目录、server目录、app目录的build
 2. 修改`package.json`的`version`
 3. `npm publish`
+

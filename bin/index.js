@@ -34,46 +34,46 @@ async function run() {
 
   program
     .command("run")
-    .option("-a, --analysis 执行静态分析，不传参数默认执行这个命令")
     .option("-z, --zh 执行静态分析，输出项目中的中文")
-    .option("-s, --server 启动node服务，确保先执行-r后再执行这个命令")
-    .option("-p, --port [port]设置node服务端口，传了这个参数默认会启动服务")
     .action(async (opts, cmd) => {
-      const { server, port, zh } = opts || {};
+      const { zh } = opts || {};
       const rootDir = process.cwd();
       const binDir = path.resolve(__dirname, "..");
       const distDir = path.resolve(__dirname, "../dist");
-      let child;
-      if (port || server) {
-        try {
-          const analysisFile = await fs.promises.access(
-            path.resolve(rootDir, "next-analysis.json")
-          );
-          if (port) {
-            child = child_process.exec(
-              `cd ${distDir} && PROJ_PATH=${rootDir} PORT=${port} node server/main.js`
-            );
-          }
-          if (server) {
-            child = child_process.exec(
-              `cd ${distDir} && PROJ_PATH=${rootDir} node server/main.js`
-            );
-          }
-        } catch (e) {
-          logger.error("next-analysis.json 不存在， 请先不带参数执行命令");
-        }
-      } else if (zh) {
-        child = child_process.exec(
-          `cd ${distDir} && PROJ_PATH=${rootDir} SHOW_ZH=1 node index.js`
-        );
-      } else {
-        child = child_process.exec(
-          `cd ${distDir} && PROJ_PATH=${rootDir} node index.js`
-        );
-      }
+      const child = child_process.exec(
+        `cd ${distDir} && PROJ_PATH=${rootDir} ${
+          zh ? "SHOW_ZH=1" : ""
+        } node index.js`
+      );
+
       if (child) {
         child.stdout.on("data", handleChildData);
         child.stderr.on("data", handleChildData);
+      }
+    });
+
+  program
+    .command("server")
+    .option("-p, --port [port] 设置node服务端口，默认8080")
+    .action(async (opts, cmd) => {
+      const { port } = opts || {};
+      const rootDir = process.cwd();
+      const binDir = path.resolve(__dirname, "..");
+      const distDir = path.resolve(__dirname, "../dist");
+      try {
+        await fs.promises.access(path.resolve(rootDir, "next-analysis.json"));
+        const child = child_process.exec(
+          `cd ${distDir} && PROJ_PATH=${rootDir} ${
+            port ? "PORT=" + port : ""
+          } node server/main.js`
+        );
+
+        if (child) {
+          child.stdout.on("data", handleChildData);
+          child.stderr.on("data", handleChildData);
+        }
+      } catch (e) {
+        logger.error("next-analysis.json 不存在， 请先执行 next-analysis run 命令");
       }
     });
 
