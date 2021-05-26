@@ -329,8 +329,15 @@ function judgeEnds(str: string, endsArr: string[]) {
 }
 
 async function getFileContent(file) {
-  const buff = await fs.promises.readFile(file);
-  return buff.toString();
+  let content;
+  try {
+    const buff = await fs.promises.readFile(file);
+    content = buff.toString();
+  } catch (e) {
+    // console.error(e);
+    content = '{}';
+  }
+  return content;
 }
 
 function mergeLang(langMap) {

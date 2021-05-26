@@ -9,7 +9,7 @@ const PROJ_PATH = process.env.PROJ_PATH;
 async function main() {
   console.log("PROJ_PATH: ", PROJ_PATH);
   // test
-  const devProjPath = "";
+  const devProjPath = "/Volumes/CaseSensitive/dosomething/next-analysis/next-demo";
   const projPath = PROJ_PATH || devProjPath;
   store.projPath = projPath;
 

@@ -2,7 +2,19 @@
 
 基于 ast 的 next 依赖分析工具。
 
-## 使用
+## 使用(调试方式)
+
+项目添加了一个 next.js 官方提供的 typescript 模板项目作为参考。
+
+首先再根目录下、app 目录下、server 目录下分别安装依赖。
+
+打开`src/index.ts:12` 修改`devProjPath`变量为在你自己电脑的绝对路径
+
+然后根目录下执行`yarn dev`，执行完毕后去 server 目录下`yarn dev`和 app 目录下`yarn dev`（这里起了两个 node，一个前端一个后端，注意后端一定要首先启动，启动完毕再去启动前端。发包之后只会起一个 node）
+
+然后访问`http://localhost:3000`即可
+
+## 使用(CLI 方式)
 
 先全局安装下：`yarn global add next-analysis`
 
@@ -33,7 +45,19 @@
 
 ## 发布
 
-1. 根目录下 `yarn dist`，会分别执行根目录、server目录、app目录的build
+1. 根目录下 `yarn dist`，会分别执行根目录、server 目录、app 目录的 build
 2. 修改`package.json`的`version`
 3. `npm publish`
 
+## 预览
+
+以下内容对应的项目是根目录下的`next-demo`
+
+整个项目的引用图结构，以 `client/pages` 为整个入口
+![引用图](./static/1.png)
+
+`client/pages/users/index.tsx`引用的组件树
+![页面引用组件树](./static/2.png)
+
+`client/interface/index.tsx`的`User`被引用结构，多层分析，一直到page终止
+![组件被引用树](./static/3.png)
