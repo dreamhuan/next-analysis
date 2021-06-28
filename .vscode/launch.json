@@ -13,6 +13,18 @@
       "cwd": "${workspaceRoot}",
       "internalConsoleOptions": "openOnSessionStart",
       "skipFiles": ["<node_internals>/**", "node_modules/**"]
-    }
+    },
+    {
+      "name": "script",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "/Users/dreamhuan/.nvm/versions/node/v12.19.0/bin/node",
+      "runtimeArgs": ["--nolazy", "-r", "ts-node/register/transpile-only"],
+
+      "args": ["script.ts"],
+
+      "cwd": "${workspaceRoot}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "skipFiles": ["<node_internals>/**", "node_modules/**"]
   ]
 }
