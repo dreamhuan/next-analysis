@@ -1,4 +1,11 @@
-import { getAst, getPageList, getProjAlias, getProjTree, write } from "./utils";
+import {
+  getAst,
+  getPageList,
+  getProjAlias,
+  getProjTree,
+  write,
+  getProjAllPath,
+} from "./utils";
 import visit from "./visitor";
 import * as path from "path";
 import store from "./store";
@@ -9,7 +16,7 @@ const PROJ_PATH = process.env.PROJ_PATH;
 async function main() {
   console.log("PROJ_PATH: ", PROJ_PATH);
   // test
-  const devProjPath = "/Volumes/CaseSensitive/dosomething/next-analysis/next-demo";
+  const devProjPath = "/home/fkq/workspace/next-analysis/next-demo";
   const projPath = PROJ_PATH || devProjPath;
   store.projPath = projPath;
 
@@ -19,8 +26,14 @@ async function main() {
   const projTree = await getProjTree(projPath);
   store.projTree = projTree;
 
+  const projAllFiles = getProjAllPath(projTree, devProjPath);
+  store.projAllFiles = projAllFiles;
+
   const pagesDir = path.join(projPath, "/client/pages");
   const pages = await getPageList(pagesDir);
+
+  const extraEntry = [path.join(projPath, "/client/main.tsx")];
+  pages.push(...extraEntry);
   // test
   // const pages = [
   //   "",
@@ -42,12 +55,18 @@ async function main() {
     store.pathIdx += 1;
   }
 
+  const ignoreFolders = [
+    path.join(projPath, "/client/assets"),
+    path.join(projPath, "/client/styles"),
+  ];
+  store.setAllUnusedFiles(ignoreFolders);
+
   const outPath = PROJ_PATH
     ? path.resolve(projPath, "next-analysis.json")
     : "next-analysis.json";
   write(outPath, store.toJSON());
   console.log(
-    "next-analysis.json、next-analysis.log placed in the root directory"
+    "next-analysis.json、next-analysis.log placed in the root directory",
   );
   logger.info("======end======");
 }

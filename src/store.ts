@@ -1,10 +1,14 @@
 class Store {
   projPath: string = "";
   projTree: IProjTree = { name: "client", isFile: false, children: [] };
+  projAllFiles: string[] = [];
+  projAllUnUsedFiles: string[] = [];
+
   alias: Record<string, string> = {};
   entry: string[] = [];
   pathIdx: number = 0;
   allPath: string[] = [];
+
   pathMapping: Record<string, Record<string, string[]>> = {};
   compMapping: Record<string, string[]> = {};
   i18nMapping: Record<string, string[]> = {};
@@ -29,6 +33,27 @@ class Store {
     } else {
       this.allPath.push(path);
     }
+  }
+
+  addProjFiles(path: string) {
+    if (this.projAllFiles.includes(path)) {
+      return;
+    } else {
+      this.projAllFiles.push(path);
+    }
+  }
+
+  setAllUnusedFiles(ignoreFolders: string[]) {
+    const unusedPath = this.projAllFiles.filter((path) => {
+      return (
+        !this.allPath.includes(path) &&
+        // 过滤掉忽视的文件比如assets等
+        !ignoreFolders.some((folder) => path.startsWith(folder)) &&
+        // 过滤掉scss文件
+        !path.endsWith(".scss")
+      );
+    });
+    this.projAllUnUsedFiles = unusedPath;
   }
 
   addPathMapping(path: string, impPath: string, impComps: string[]) {
@@ -69,6 +94,8 @@ class Store {
       projPath: this.projPath,
       alias: this.alias,
       projTree: this.projTree,
+      projAllFiles: this.projAllFiles,
+      projAllUnUsedFiles: this.projAllUnUsedFiles,
       entry: this.entry,
       allPath: this.allPath,
       pathMapping: this.pathMapping,
@@ -80,7 +107,7 @@ class Store {
 
 export default new Store();
 
-interface IProjTree {
+export interface IProjTree {
   name: string;
   isFile: boolean;
   children?: IProjTree[];
