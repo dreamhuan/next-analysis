@@ -55,7 +55,8 @@ export default function visit(node: ts.Node, sf: ts.SourceFile) {
   if (impFlag || impExpFlag) {
     let includePath = (node as ts.ImportDeclaration).moduleSpecifier.getText();
     includePath = includePath.replace(/'|"/g, "");
-    const firstPath = includePath.split(path.sep)[0];
+    // 这边是代码import语句不是真实路径，所以不能用path.sep
+    const firstPath = includePath.split("/")[0];
 
     if (includePath.endsWith(".scss") || includePath.endsWith(".css")) {
       return;
@@ -73,14 +74,14 @@ export default function visit(node: ts.Node, sf: ts.SourceFile) {
       namedImp = (
         node.importClause?.namedBindings as ts.NamedImports
       )?.elements?.map(
-        (ele) => ele.propertyName?.escapedText || ele.name?.escapedText
+        (ele) => ele.propertyName?.escapedText || ele.name?.escapedText,
       );
     } else if (kind.isExportDeclaration(node)) {
       // export { default as ContractTable } from './ContractTable'
       const expElements: any =
         (impExpFlag && (node.exportClause as ts.NamedExports)?.elements) || [];
       namedExp = expElements.map(
-        (ele) => ele.propertyName?.escapedText || ele.name?.escapedText
+        (ele) => ele.propertyName?.escapedText || ele.name?.escapedText,
       );
     }
 
@@ -104,7 +105,7 @@ export default function visit(node: ts.Node, sf: ts.SourceFile) {
             const value = alias[k].replace("*", "");
             absolutePath = path.resolve(
               projPath,
-              includePath.replace(firstPath, value)
+              includePath.replace(firstPath, value),
             );
             break;
           }
@@ -138,7 +139,7 @@ export default function visit(node: ts.Node, sf: ts.SourceFile) {
         }
         store.addPathMapping(curPath, absPath || includePath, comps);
         store.addCompMapping(absPath || includePath, comps, curPath);
-      })
+      }),
     );
   } else {
     return node.forEachChild((node) => visit(node, sf));
