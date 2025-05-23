@@ -16,8 +16,7 @@ const PROJ_PATH = process.env.PROJ_PATH;
 async function main() {
   console.log("PROJ_PATH: ", PROJ_PATH);
   // test
-  const devProjPath =
-    "C:\\Users\\fkq\\workspace\\vibe\\vibe-room\\apps\\vibe-room-app";
+  const devProjPath = "/home/fkq/workspace/next-analysis/next-demo";
   const projPath = PROJ_PATH || devProjPath;
   store.projPath = projPath;
 
@@ -32,6 +31,9 @@ async function main() {
 
   const pagesDir = path.join(projPath, "/client/pages");
   const pages = await getPageList(pagesDir);
+
+  const extraEntry = [path.join(projPath, "/client/main.tsx")];
+  pages.push(...extraEntry);
   // test
   // const pages = [
   //   "",
