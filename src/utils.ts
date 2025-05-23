@@ -1,8 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 import * as ts from "typescript";
-import * as JSON5 from 'json5';
+import * as JSON5 from "json5";
 import logger from "./logger";
+import type { IProjTree } from "./store";
 
 async function _addSuffix(pathName: string) {
   const suffix = ["", ".ts", ".tsx"];
@@ -72,7 +73,7 @@ export async function getAst(fileName: string) {
     code,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TSX
+    ts.ScriptKind.TSX,
   );
   return sourceFile;
 }
@@ -101,12 +102,12 @@ export async function getProjAlias(rootPath: string) {
   alias = Object.fromEntries(
     Object.entries(alias)
       .filter(([k, v]) => k !== "*")
-      .map(([k, v]) => [k, v[0]])
+      .map(([k, v]) => [k, v[0]]),
   );
   alias["client/*"] = "client/*";
   const dirInClient = await fs.promises.readdir(path.join(rootPath, "client"));
   const canAlias = dirInClient.filter(
-    (d) => ![".next", "_static", "@types", "i18n.js"].includes(d)
+    (d) => ![".next", "_static", "@types", "i18n.js"].includes(d),
   );
   canAlias.forEach((k) => {
     alias[k] = `${k}/index.ts`;
@@ -134,4 +135,21 @@ export async function getProjTree(parent, name = "client") {
     }
   }
   return pathObj;
+}
+
+export function getProjAllPath(projTree: IProjTree, devProjPath: string) {
+  // 递归遍历目录树，获取所有文件路径，并打平成list
+  const allPath: string[] = [];
+  function traverseTree(node: IProjTree, parentPath: string) {
+    const curPath = path.join(parentPath, node.name);
+    if (node.isFile) {
+      allPath.push(path.join(devProjPath, curPath));
+    } else {
+      node.children.forEach((child) => {
+        traverseTree(child, curPath);
+      });
+    }
+  }
+  traverseTree(projTree, "");
+  return allPath;
 }
