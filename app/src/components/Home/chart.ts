@@ -10,7 +10,7 @@ const chart = (
   data: TData | null,
   width = 600,
   height = 600,
-  eventBus: (e: IEvt) => void = noop
+  eventBus: (e: IEvt) => void = noop,
 ) => {
   if (isEmpty(ele)) return;
   if (isEmpty(data)) return;
@@ -21,7 +21,7 @@ const chart = (
     .forceSimulation(nodes)
     .force(
       "link",
-      d3.forceLink(links).id((d: any) => d.id)
+      d3.forceLink(links).id((d: any) => d.id),
     )
     .force("charge", d3.forceManyBody())
     .force("center", d3.forceCenter(width / 2, height / 2));
@@ -64,6 +64,21 @@ const chart = (
       if (!e.active) simulation.alphaTarget(0.3).restart();
       e.subject.fx = e.subject.x;
       e.subject.fy = e.subject.y;
+
+      // 找到与点击节点连接的线
+      const connectedLinks = links.filter(
+        (link) => link.source.id === id || link.target.id === id,
+      );
+
+      // 将连接线的颜色改为红色
+      link
+        .attr("stroke", (d) => (connectedLinks.includes(d) ? "red" : "#999"))
+        .attr("stroke-opacity", 0.6);
+
+      // TODO 逻辑二选一 将箭头的颜色改为红色
+      link.attr("marker-end", (d) =>
+        connectedLinks.includes(d) ? "url(#arrow-red)" : "url(#arrow)",
+      );
     })
     .on("drag", (e) => {
       e.subject.fx = e.x;
@@ -74,6 +89,21 @@ const chart = (
   //   e.subject.fx = null;
   //   e.subject.fy = null;
   // });
+
+  // TODO 逻辑二选一 创建红色箭头
+  svg
+    .append("defs")
+    .append("marker")
+    .attr("id", "arrow-red")
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 20)
+    .attr("refY", 0)
+    .attr("markerWidth", 8)
+    .attr("markerHeight", 8)
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", "M0,-5L10,0L0,5")
+    .attr("fill", "red"); // 红色箭头
 
   const node = svg
     .append("g")
