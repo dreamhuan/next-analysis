@@ -47,7 +47,10 @@ class Store {
     const unusedPath = this.projAllFiles.filter((path) => {
       return (
         !this.allPath.includes(path) &&
-        !ignoreFolders.some((folder) => path.startsWith(folder))
+        // 过滤掉忽视的文件比如assets等
+        !ignoreFolders.some((folder) => path.startsWith(folder)) &&
+        // 过滤掉scss文件
+        !path.endsWith(".scss")
       );
     });
     this.projAllUnUsedFiles = unusedPath;
