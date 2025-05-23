@@ -15,7 +15,7 @@ export default function visit(node: ts.Node, sf: ts.SourceFile) {
   const alias = store.alias;
   const projPath = store.projPath;
   const curPath = store.allPath[store.pathIdx];
-  const curDir = curPath.substring(0, curPath.lastIndexOf("/"));
+  const curDir = curPath.substring(0, curPath.lastIndexOf(path.sep));
   const aliasKeys = Object.keys(alias);
   const nodeText = node.getText();
 
@@ -55,7 +55,7 @@ export default function visit(node: ts.Node, sf: ts.SourceFile) {
   if (impFlag || impExpFlag) {
     let includePath = (node as ts.ImportDeclaration).moduleSpecifier.getText();
     includePath = includePath.replace(/'|"/g, "");
-    const firstPath = includePath.split("/")[0];
+    const firstPath = includePath.split(path.sep)[0];
 
     if (includePath.endsWith(".scss") || includePath.endsWith(".css")) {
       return;

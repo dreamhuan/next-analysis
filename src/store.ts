@@ -1,3 +1,6 @@
+import * as path from "path";
+import { isWindows } from "./utils";
+
 class Store {
   projPath: string = "";
   projTree: IProjTree = { name: "client", isFile: false, children: [] };
@@ -90,7 +93,7 @@ class Store {
   }
 
   toJSON() {
-    return JSON.stringify({
+    const jsonString = JSON.stringify({
       projPath: this.projPath,
       alias: this.alias,
       projTree: this.projTree,
@@ -101,7 +104,25 @@ class Store {
       pathMapping: this.pathMapping,
       compMapping: this.compMapping,
       i18nMapping: this.i18nMapping,
-    }).replace(new RegExp(this.projPath + "/", "g"), "");
+    });
+
+    let jsonStringFormatted = "";
+
+    // 确保路径末尾有斜杠
+    const normalizedProjPath = this.projPath.endsWith(path.sep)
+      ? this.projPath
+      : this.projPath + path.sep;
+
+    let searchValue;
+    if (isWindows()) {
+      // windows下stringify后路径中\转义为\\，需要替换为\\\\ ，简直制杖
+      const escapedProjPath = normalizedProjPath.replaceAll(path.sep, "\\\\");
+      searchValue = escapedProjPath;
+    } else {
+      searchValue = normalizedProjPath;
+    }
+    jsonStringFormatted = jsonString.replaceAll(searchValue, "");
+    return jsonStringFormatted;
   }
 }
 

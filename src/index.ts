@@ -5,6 +5,7 @@ import {
   getProjTree,
   write,
   getProjAllPath,
+  isWindows,
 } from "./utils";
 import visit from "./visitor";
 import * as path from "path";
@@ -16,7 +17,10 @@ const PROJ_PATH = process.env.PROJ_PATH;
 async function main() {
   console.log("PROJ_PATH: ", PROJ_PATH);
   // test
-  const devProjPath = "/home/fkq/workspace/next-analysis/next-demo";
+  let devProjPath = "C:/Users/fkq/workspace/next-analysis/next-demo";
+  if (isWindows()) {
+    devProjPath = path.win32.normalize(devProjPath);
+  }
   const projPath = PROJ_PATH || devProjPath;
   store.projPath = projPath;
 

@@ -5,6 +5,10 @@ import * as JSON5 from "json5";
 import logger from "./logger";
 import type { IProjTree } from "./store";
 
+export function isWindows() {
+  return /^win/.test(process.platform);
+}
+
 async function _addSuffix(pathName: string) {
   const suffix = ["", ".ts", ".tsx"];
   const len = suffix.length;
@@ -46,7 +50,7 @@ export async function addSuffix(fileName: string) {
 
 export async function read(fileName: string) {
   let filePath: string = fileName;
-  if (!filePath.startsWith("/")) {
+  if (!filePath.startsWith(path.sep)) {
     filePath = path.resolve(__dirname, fileName);
   }
   const res = await addSuffix(filePath);
