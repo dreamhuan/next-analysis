@@ -49,6 +49,34 @@ export default function Home() {
     handleNodeClick(v);
   };
 
+  const handleExport = async () => {
+    const container = ref.current;
+    if (!container) return;
+
+    // 获取当前容器内的 SVG 元素
+    const svgElement = container.querySelector("svg");
+    if (!svgElement) {
+      message.error("没有可导出的图表");
+      return;
+    }
+
+    // 使用 XMLSerializer 将 SVG 转换为字符串
+    const serializer = new XMLSerializer();
+    const svgString = serializer.serializeToString(svgElement);
+
+    // 创建 Blob 并触发下载
+    const blob = new Blob([svgString], { type: "image/svg+xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "graph.svg"; // 设置下载文件名
+    a.click();
+
+    // 清理资源
+    URL.revokeObjectURL(url);
+  };
+
   const handleCopy = (v) => {
     copy(v, () => {
       message.success("复制成功");
@@ -88,6 +116,7 @@ export default function Home() {
       <div className={styles.operation}>
         <PageSelector value={value} hasTest onChange={handleChange} />
         <Button onClick={repaint}>重绘</Button>
+        <Button onClick={handleExport}>导出</Button>
         <Card className={cx(styles.card)} title="基本信息">
           <p>
             结点路径：

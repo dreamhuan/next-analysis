@@ -75,22 +75,22 @@ const chart = (
         .attr("stroke", (d) => (connectedLinks.includes(d) ? "red" : "#999"))
         .attr("stroke-opacity", 0.6);
 
-      // TODO 逻辑二选一 将箭头的颜色改为红色
       link.attr("marker-end", (d) =>
         connectedLinks.includes(d) ? "url(#arrow-red)" : "url(#arrow)",
       );
     })
     .on("drag", (e) => {
+      // 挪动节点
       e.subject.fx = e.x;
       e.subject.fy = e.y;
     });
   // .on("end", (e) => {
+  //   // 挪动节点后重新计算位置（而不是固定在那里）
   //   if (!e.active) simulation.alphaTarget(0);
   //   e.subject.fx = null;
   //   e.subject.fy = null;
   // });
 
-  // TODO 逻辑二选一 创建红色箭头
   svg
     .append("defs")
     .append("marker")
@@ -119,6 +119,12 @@ const chart = (
     .call(behavior);
 
   node.append("title").text((d) => d.id);
+
+  node.on("dblclick", (e, d) => {
+    d.fx = null;
+    d.fy = null;
+    simulation.alphaTarget(0.3).restart(); // 可选：重新启动模拟动画
+  });
 
   simulation.on("tick", () => {
     link
